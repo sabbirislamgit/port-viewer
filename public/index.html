@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Port Viewer Ultimate</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <style>
+        body { background-color: #0f172a; color: #e2e8f0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .modal-glass { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(16px); }
+        [v-cloak] { display: none; }
+    </style>
+</head>
+<body class="p-2 md:p-8 min-h-screen">
+    <div id="app" v-cloak class="max-w-7xl mx-auto">
+        
+        <!-- Header & Action Bar -->
+        <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-5">
+            <h1 class="text-3xl font-bold text-sky-400 flex items-center gap-3">
+                <i class="fa-brands fa-docker text-4xl"></i> Port Viewer <span class="text-xs bg-gradient-to-r from-sky-500 to-indigo-500 text-white px-2 py-1 rounded-md ml-2 shadow-lg">ULTIMATE</span>
+            </h1>
+            <div class="flex gap-3 flex-wrap justify-center">
+                <button @click="showPortScanner = true" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl transition text-sm font-medium"><i class="fa-solid fa-radar", mr-2></i> Port Scanner</button>
+                <button @click="exportCSV" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl transition text-sm font-medium"><i class="fa-solid fa-file-csv"></i> CSV</button>
+                <button @click="exportJSON" class="bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-xl transition text-sm font-medium"><i class="fa-solid fa-file-code"></i> JSON</button>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="glass p-5 rounded-2xl border-l-4 border-sky-500">
+                <p class="text-slate-400 text-sm font-semibold uppercase">Total Apps</p>
+                <h2 class="text-3xl font-bold text-white">{{ containers.length }}</h2>
+            </div>
+            <div class="glass p-5 rounded-2xl border-l-4 border-emerald-500">
+                <p class="text-slate-400 text-sm font-semibold uppercase">Running</p>
+                <h2 class="text-3xl font-bold text-emerald-400">{{ runningCount }}</h2>
+            </div>
+            <div class="glass p-5 rounded-2xl border-l-4 border-red-500">
+                <p class="text-slate-400 text-sm font-semibold uppercase">Stopped</p>
+                <h2 class="text-3xl font-bold text-red-400">{{ stoppedCount }}</h2>
+            </div>
+            <div class="glass p-5 rounded-2xl border-l-4 border-indigo-500">
+                <p class="text-slate-400 text-sm font-semibold uppercase">Exposed Ports</p>
+                <h2 class="text-3xl font-bold text-indigo-400">{{ totalPorts }}</h2>
+            </div>
+        </div>
+
+        <!-- Search & Filter -->
+        <div class="relative mb-6">
+            <i class="fa-solid fa-search absolute left-4 top-3.5 text-slate-400"></i>
+            <input v-model="searchQuery" type="text" placeholder="Search by App Name, Network, or Port..." class="w-full bg-slate-800/80 border border-slate-700 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 shadow-inner">
+        </div>
+
+        <!-- Main Table -->
+        <div class="glass rounded-2xl overflow-hidden shadow-2xl">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse whitespace-nowrap md:whitespace-normal">
+                    <thead>
+                        <tr class="bg-slate-900/80 text-slate-300 text-sm uppercase tracking-wider">
+                            <th class="p-4 font-semibold">App Details</th>
+                            <th class="p-4 font-semibold">Status & Uptime</th>
+                            <th class="p-4 font-semibold hidden md:table-cell">Network / CPU</th>
+                            <th class="p-4 font-semibold">Mapped Ports</th>
+                            <th class="p-4 font-semibold text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-700/50">
+                        <tr v-if="loading" class="animate-pulse bg-slate-800/50"><td colspan="5" class="p-10 text-center text-slate-400">Loading Docker API...</td></tr>
+                        
+                        <tr v-for="c in filteredContainers" :key="c.id" class="hover:bg-slate-800/40 transition-colors group">
+                            
+                            <!-- App Info & Icon -->
+                            <td class="p-4">
+                                <div class="flex items-center gap-4">
+                                    <img :src="getIconUrl(c.name)" @error="handleImageError" class="w-10 h-10 rounded-lg bg-slate-800 p-1 object-contain shadow-md" alt="icon">
+                                    <div>
+                                        <p class="font-bold text-slate-200 text-lg cursor-pointer hover:text-sky-400" @click="showDetails(c)">{{ c.name }}</p>
+                                        <p class="text-xs text-slate-500"><i class="fa-solid fa-layer-group"></i> {{ c.composeProject }}</p>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- Status -->
+                            <td class="p-4">
+                                <div class="flex flex-col">
+                                    <span :class="c.state === 'running' ? 'text-emerald-400' : 'text-red-400'" class="font-semibold capitalize flex items-center gap-2">
+                                        <span v-if="c.state === 'running'" class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span></span>
+                                        <span v-else class="inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                                        {{ c.state }}
+                                    </span>
+                                    <span class="text-xs text-slate-400 mt-1">{{ c.status }}</span>
+                                </div>
+                            </td>
+
+                            <!-- Network & Stats (Desktop Only) -->
+                            <td class="p-4 hidden md:table-cell">
+                                <p class="text-sm text-slate-300"><i class="fa-solid fa-network-wired text-slate-500 w-4"></i> {{ c.networks }}</p>
+                                <p v-if="stats[c.id]" class="text-xs text-slate-400 mt-1">
+                                    <i class="fa-solid fa-microchip text-slate-500 w-4"></i> CPU: {{ stats[c.id].cpu }}% | RAM: {{ stats[c.id].ramPercent }}%
+                                </p>
+                                <button v-else-if="c.state === 'running'" @click="fetchStats(c.id)" class="text-xs text-sky-400 hover:underline mt-1">Load Live Stats</button>
+                            </td>
+
+                            <!-- Ports -->
+                            <td class="p-4">
+                                <div v-if="c.ports.length === 0" class="text-slate-500 text-sm"><i class="fa-solid fa-link-slash"></i> Internal Only</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <div v-for="p in c.ports" :key="p.public" :class="isPortConflict(p.public) ? 'bg-red-500/20 border-red-500/50 text-red-300' : 'bg-sky-500/10 border-sky-500/30 text-sky-300'" class="border rounded-lg p-1.5 flex items-center gap-2 text-sm shadow-sm">
+                                        <span class="font-bold">{{ p.public }}</span>
+                                        <i class="fa-solid fa-arrow-right text-[10px] opacity-50"></i>
+                                        <span class="text-xs opacity-80">{{ p.private }}</span>
+                                        
+                                        <!-- Actions: Copy & Open -->
+                                        <div class="border-l border-sky-500/30 pl-2 ml-1 flex gap-2">
+                                            <button @click="copyPort(p.public)" title="Copy Port" class="hover:text-white transition"><i class="fa-regular fa-copy"></i></button>
+                                            <a :href="'http://' + currentHost + ':' + p.public" target="_blank" title="Open in Browser" class="hover:text-white transition"><i class="fa-solid fa-external-link-alt"></i></a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- App Actions -->
+                            <td class="p-4 text-center">
+                                <div class="flex justify-center gap-2">
+                                    <button v-if="c.state !== 'running'" @click="performAction(c.id, 'start')" class="w-8 h-8 rounded bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white transition" title="Start"><i class="fa-solid fa-play"></i></button>
+                                    <button v-if="c.state === 'running'" @click="performAction(c.id, 'restart')" class="w-8 h-8 rounded bg-amber-500/20 text-amber-400 hover:bg-amber-500 hover:text-white transition" title="Restart"><i class="fa-solid fa-rotate-right"></i></button>
+                                    <button v-if="c.state === 'running'" @click="performAction(c.id, 'stop')" class="w-8 h-8 rounded bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition" title="Stop"><i class="fa-solid fa-stop"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Port Scanner Modal -->
+        <div v-if="showPortScanner" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-glass">
+            <div class="bg-slate-800 rounded-2xl w-full max-w-md p-6 border border-slate-700 shadow-2xl relative">
+                <button @click="showPortScanner = false" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-times text-xl"></i></button>
+                <h3 class="text-xl font-bold text-sky-400 mb-4"><i class="fa-solid fa-radar mr-2"></i> Free Port Scanner</h3>
+                <p class="text-sm text-slate-300 mb-4">Enter a starting port number, and we'll find the nearest available port that doesn't conflict with your current apps.</p>
+                <div class="flex gap-2">
+                    <input v-model.number="scanStartPort" type="number" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white" placeholder="e.g. 8080">
+                    <button @click="findFreePort" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 rounded-lg font-bold">Scan</button>
+                </div>
+                <div v-if="suggestedPort" class="mt-6 p-4 bg-emerald-500/20 border border-emerald-500/30 rounded-xl text-center">
+                    <p class="text-emerald-400 font-bold text-lg">Port {{ suggestedPort }} is Free! ✅</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Vue Logic -->
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    containers: [],
+                    stats: {},
+                    searchQuery: '',
+                    loading: true,
+                    currentHost: window.location.hostname,
+                    showPortScanner: false,
+                    scanStartPort: 8000,
+                    suggestedPort: null,
+                }
+            },
+            computed: {
+                filteredContainers() {
+                    const q = this.searchQuery.toLowerCase();
+                    return this.containers.filter(c => 
+                        c.name.toLowerCase().includes(q) || 
+                        c.networks.toLowerCase().includes(q) ||
+                        c.ports.some(p => p.public && p.public.toString().includes(q))
+                    );
+                },
+                runningCount() { return this.containers.filter(c => c.state === 'running').length; },
+                stoppedCount() { return this.containers.filter(c => c.state !== 'running').length; },
+                totalPorts() { 
+                    return this.containers.reduce((acc, c) => acc + c.ports.length, 0);
+                },
+                allUsedPorts() {
+                    let ports = [];
+                    this.containers.forEach(c => c.ports.forEach(p => ports.push(p.public)));
+                    return ports;
+                }
+            },
+            methods: {
+                async fetchData() {
+                    try {
+                        const res = await fetch('/api/containers');
+                        this.containers = await res.json();
+                        this.loading = false;
+                    } catch (e) { console.error(e); }
+                },
+                async fetchStats(id) {
+                    try {
+                        const res = await fetch(`/api/stats/${id}`);
+                        this.stats[id] = await res.json();
+                    } catch (e) { console.error("Stats Error:", e); }
+                },
+                async performAction(id, action) {
+                    if(!confirm(`Are you sure you want to ${action} this app?`)) return;
+                    try {
+                        await fetch(`/api/action/${id}/${action}`, { method: 'POST' });
+                        this.fetchData(); // Refresh UI
+                    } catch (e) { alert("Failed to execute action. Is Docker socket Read-Write?"); }
+                },
+                getIconUrl(name) {
+                    // Try to guess icon from Homarr dashboard icons based on container name
+                    const cleanName = name.split('-')[0].toLowerCase();
+                    return `https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/${cleanName}.png`;
+                },
+                handleImageError(e) {
+                    // Fallback to default docker icon if specific app icon not found
+                    e.target.src = 'https://cdn.jsdelivr.net/gh/WalkxCode/dashboard-icons/png/docker.png';
+                },
+                isPortConflict(port) {
+                    // Check if this port appears more than once in the list
+                    return this.allUsedPorts.filter(p => p === port).length > 1;
+                },
+                copyPort(port) {
+                    navigator.clipboard.writeText(port);
+                    alert(`Port ${port} copied to clipboard!`);
+                },
+                findFreePort() {
+                    let checkPort = this.scanStartPort;
+                    while(this.allUsedPorts.includes(checkPort)) {
+                        checkPort++;
+                    }
+                    this.suggestedPort = checkPort;
+                },
+                exportCSV() {
+                    let csv = 'App Name,Status,Project,Network,Mapped Ports\n';
+                    this.containers.forEach(c => {
+                        const ports = c.ports.map(p => `${p.public}->${p.private}`).join(' | ');
+                        csv += `${c.name},${c.state},${c.composeProject},"${c.networks}","${ports}"\n`;
+                    });
+                    const blob = new Blob([csv], { type: 'text/csv' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url; a.download = 'casaos_ports.csv'; a.click();
+                },
+                exportJSON() {
+                    const blob = new Blob([JSON.stringify(this.containers, null, 2)], { type: 'application/json' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url; a.download = 'casaos_ports.json'; a.click();
+                }
+            },
+            mounted() {
+                this.fetchData();
+                setInterval(this.fetchData, 5000); // Live refresh every 5 seconds
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
