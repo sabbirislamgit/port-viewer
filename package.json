@@ -1,7 +1,7 @@
 {
-  "name": "port-viewer",
-  "version": "1.0.0",
-  "description": "A modern tool to view Docker container ports",
+  "name": "port-viewer-pro",
+  "version": "2.0.0",
+  "description": "Ultimate Docker Dashboard for CasaOS",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
