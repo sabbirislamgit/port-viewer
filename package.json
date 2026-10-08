@@ -1,0 +1,13 @@
+{
+  "name": "port-viewer",
+  "version": "1.0.0",
+  "description": "A modern tool to view Docker container ports",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "dockerode": "^4.0.0",
+    "express": "^4.19.2"
+  }
+}
