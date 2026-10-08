@@ -1,7 +1,7 @@
-name: port-viewer
+name: port-viewer-pro
 services:
   port-viewer:
-    image: ghcr.io/sabbirislamgit/port-viewer:main 
+    image: ghcr.io/sabbirislamgit/port-viewer:latest
     container_name: port-viewer
     hostname: port-viewer-server
     restart: unless-stopped
@@ -12,16 +12,15 @@ services:
     ports:
       - "8585:8585"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Start/stop
+      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - port-network
-    
     logging:
       driver: json-file
       options:
         max-size: "10m"
         max-file: "3"
-    
     x-casaos:
       envs:
         - container: TZ
@@ -30,7 +29,7 @@ services:
       volumes:
         - container: /var/run/docker.sock
           description:
-            en_US: Docker Socket (Read-Only access for safety)
+            en_US: Docker Socket (Required for Start/Stop actions)
       ports:
         - container: "8585"
           description:
@@ -39,10 +38,10 @@ services:
       category: "System Tools"
       icon: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/portabase.png"
       title:
-        en_US: "Port Viewer"
+        en_US: "Port Viewer Pro"
       port_map: "8585"
       description:
-        en_US: "A modern tool to view and monitor container ports via Docker socket."
+        en_US: "Ultimate Docker container management and port scanning tool."
 
 networks:
   port-network:
