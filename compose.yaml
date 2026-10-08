@@ -1,7 +1,7 @@
-name: port-viewer-pro
+name: port-viewer
 services:
   port-viewer:
-    image: ghcr.io/sabbirislamgit/port-viewer:main
+    image: ghcr.io/sabbirislamgit/port-viewer:latest
     container_name: port-viewer
     hostname: port-viewer-server
     restart: unless-stopped
@@ -12,7 +12,7 @@ services:
     ports:
       - "8585:8585"
     volumes:
-      # Start/stop
+      # Start/Stop docker section
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - port-network
@@ -21,6 +21,8 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+    
+    # CasaOS Dashbaord Settings
     x-casaos:
       envs:
         - container: TZ
@@ -34,11 +36,11 @@ services:
         - container: "8585"
           description:
             en_US: Web UI Access Port
-      author: "Admin"
+      author: "Sabbir"
       category: "System Tools"
-      icon: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/portabase.png"
+      icon: "https://cdn.jsdelivr.net/gh/selfhst/icons/png/portainer.png"
       title:
-        en_US: "Port Viewer Pro"
+        en_US: "Port Viewer"
       port_map: "8585"
       description:
         en_US: "Ultimate Docker container management and port scanning tool."
