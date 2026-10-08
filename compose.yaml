@@ -1,0 +1,50 @@
+name: port-viewer
+services:
+  port-viewer:
+    image: ghcr.io/sabbirislamgit/port-viewer:main 
+    container_name: port-viewer
+    hostname: port-viewer-server
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - TZ=Asia/Dhaka
+    ports:
+      - "8585:8585"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - port-network
+    
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    x-casaos:
+      envs:
+        - container: TZ
+          description:
+            en_US: Timezone for the container
+      volumes:
+        - container: /var/run/docker.sock
+          description:
+            en_US: Docker Socket (Read-Only access for safety)
+      ports:
+        - container: "8585"
+          description:
+            en_US: Web UI Access Port
+      author: "Admin"
+      category: "System Tools"
+      icon: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/portabase.png"
+      title:
+        en_US: "Port Viewer"
+      port_map: "8585"
+      description:
+        en_US: "A modern tool to view and monitor container ports via Docker socket."
+
+networks:
+  port-network:
+    name: port-network
+    driver: bridge
