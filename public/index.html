@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Port Viewer</title>
+    <title>Port Viewer Ultimate</title>
     
     <!-- SVG Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg version='1.1' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128' width='128px' height='128px' fill='%233BBCED'%3E%3Cpath d='M49.32,29.44h-1.88v9.75h1.88V29.44z M57.41,29.44h-1.88v9.75h1.88V29.44z M68.47,10.84L66.54,7.5L34.36,26.1 l1.93,3.34L68.47,10.84z' /%3E%3Cpath d='M68.28,10.84l1.93-3.34l32.18,18.6l-1.93,3.34L68.28,10.84z' /%3E%3Cpath d='M108.08,29.49v-3.86H19.92v3.86H108.08z' /%3E%3Cpath d='M73.17,84.01V26.8h3.86v59.98C76,85.61,74.68,84.76,73.17,84.01z M66.59,83.02V2.32h3.86v81.17 C69.36,82.97,66.73,83.02,66.59,83.02z M30.04,91.07c-4.7-3.48-7.81-9.04-7.81-15.35c0-3.34,0.89-6.64,2.54-9.51H57.7 c1.69,2.87,2.54,6.17,2.54,9.51c0,2.92-0.38,5.65-1.55,8.1c-2.49-2.4-6.16-3.44-9.88-3.44c-6.59,0-12.23,4.1-13.69,10.22 c-0.52-0.05-0.85-0.09-1.36-0.09C32.48,90.55,31.26,90.74,30.04,91.07L30.04,91.07z' /%3E%3Cpath d='M46.22,43.52h-9.97v10.03h9.97V43.52z M34.97,43.52H25v10.03h9.97V43.52z M34.97,54.68H25v10.03h9.97V54.68z M46.22,54.68h-9.97v10.03h9.97V54.68z M57.41,54.68h-9.97v10.03h9.97V54.68z M57.41,38.15h-9.97v10.03h9.97V38.15z' /%3E%3Cpath d='M36.76,92.58c1.36-5.79,6.59-10.12,12.8-10.12c4,0,7.57,1.79,10.02,4.62c2.12-1.46,4.66-2.31,7.43-2.31 c7.24,0,13.12,5.88,13.12,13.14c0,1.51-0.23,2.92-0.7,4.28c1.6,2.17,2.59,4.9,2.59,7.82c0,7.25-5.88,13.14-13.13,13.14 c-3.2,0-6.12-1.13-8.37-3.01c-2.4,3.34-6.3,5.56-10.73,5.56c-5.08,0-9.5-2.92-11.71-7.16c-0.89,0.19-1.79,0.28-2.73,0.28 c-7.24,0-13.17-5.89-13.17-13.14s5.88-13.14,13.17-13.14C35.82,92.49,36.29,92.49,36.76,92.58L36.76,92.58z' /%3E%3C/svg%3E">
@@ -24,7 +24,7 @@
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
-                        brand: { 50: '#f0fdfa', 100: '#ccfbf1', 400: '#3BBCED', 500: '#3BBCED', 600: '#2BA6D8' }, /* Updated brand color to match your SVG */
+                        brand: { 50: '#f0fdfa', 100: '#ccfbf1', 400: '#3BBCED', 500: '#3BBCED', 600: '#2BA6D8' },
                         surface: { 50: '#fafafa', 100: '#f4f4f5', 800: '#18181b', 900: '#09090b', 950: '#000000' }
                     },
                     animation: {
@@ -129,11 +129,11 @@
                         
                         <tr v-for="c in filteredContainers" :key="c.id" class="row-hover transition-colors group">
                             
-                            <!-- Application -->
+                            <!-- Application (Grayscale filter removed) -->
                             <td class="px-5 py-4">
                                 <div class="flex items-center gap-3">
                                     <div class="w-8 h-8 rounded bg-white/5 border border-white/10 flex items-center justify-center p-1.5 shrink-0">
-                                        <img :src="getIconUrl(c.name)" @error="handleImageError" class="w-full h-full object-contain filter grayscale group-hover:grayscale-0 transition duration-300 opacity-80 group-hover:opacity-100" alt="icon">
+                                        <img :src="getIconUrl(c.name)" @error="handleImageError" class="w-full h-full object-contain transition duration-300 opacity-90 group-hover:opacity-100" alt="icon">
                                     </div>
                                     <div>
                                         <p class="font-medium text-gray-100">{{ c.name }}</p>
@@ -172,7 +172,7 @@
                             <td class="px-5 py-4">
                                 <div v-if="c.ports.length === 0" class="text-gray-600 text-xs italic">Internal network only</div>
                                 <div class="flex flex-wrap gap-1.5">
-                                    <div v-for="p in c.ports" :key="p.public" 
+                                    <div v-for="p in c.ports" :key="p.public + p.type" 
                                         class="group/port flex items-center bg-black border rounded px-2 py-1 gap-2 transition-colors cursor-default"
                                         :class="isPortConflict(p.public) ? 'border-rose-500/30 text-rose-300' : 'border-white/10 text-gray-300 hover:border-white/20'">
                                         
@@ -203,22 +203,18 @@
             </div>
         </div>
 
-        <!-- Custom Footer (Developer Credit) -->
+        <!-- Custom Footer (Updated Developer Credit) -->
         <footer class="mt-auto pt-12 pb-4 text-center shrink-0">
             <p class="text-[13px] text-gray-500/80">
-                Developer, Design <a href="https://sabbirislam.vercel.app" target="_blank" class="text-brand-400 hover:text-brand-300 transition-colors font-medium ml-1">Sabbir</a>
+                Built with ❤️ by <a href="https://sabbirislam.vercel.app/" target="_blank" class="text-brand-400 hover:text-brand-300 transition-colors font-medium">Sabbir</a>
             </p>
         </footer>
 
         <!-- Custom Confirm Modal -->
         <transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0" enter-to-class="opacity-100" leave-active-class="transition duration-150 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0">
             <div v-if="confirmModal.show" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-                <!-- Blurred Backdrop -->
                 <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click.self="!confirmModal.loading && closeConfirmModal()"></div>
-                
-                <!-- Modal Content -->
                 <div class="relative bg-surface-900 border border-white/10 rounded-xl w-full max-w-sm p-6 shadow-2xl animate-modal-in">
-                    
                     <div class="flex items-start gap-4">
                         <div class="shrink-0 flex items-center justify-center w-10 h-10 rounded-full" :class="confirmModal.action === 'stop' ? 'bg-rose-500/10 text-rose-500' : 'bg-surface-800 text-white'">
                             <i class="fa-solid" :class="confirmModal.action === 'stop' ? 'fa-triangle-exclamation' : 'fa-circle-question'"></i>
@@ -228,11 +224,8 @@
                             <p class="text-sm text-gray-400 leading-relaxed" v-html="confirmModal.message"></p>
                         </div>
                     </div>
-
                     <div class="mt-6 flex justify-end gap-3">
-                        <button :disabled="confirmModal.loading" @click="closeConfirmModal" class="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white bg-transparent border border-white/10 hover:bg-white/5 rounded-lg transition disabled:opacity-50">
-                            Cancel
-                        </button>
+                        <button :disabled="confirmModal.loading" @click="closeConfirmModal" class="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white bg-transparent border border-white/10 hover:bg-white/5 rounded-lg transition disabled:opacity-50">Cancel</button>
                         <button :disabled="confirmModal.loading" @click="executeAction" class="px-4 py-2 text-sm font-medium text-white rounded-lg transition flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed" :class="confirmModal.action === 'stop' ? 'bg-rose-600 hover:bg-rose-500' : 'bg-brand-600 hover:bg-brand-500'">
                             <i v-if="confirmModal.loading" class="fa-solid fa-circle-notch fa-spin"></i>
                             <span v-else>{{ confirmModal.actionText }}</span>
@@ -242,21 +235,18 @@
             </div>
         </transition>
 
-        <!-- Port Scanner Modal (Redesigned) -->
+        <!-- Port Scanner Modal -->
         <transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0" enter-to-class="opacity-100" leave-active-class="transition duration-150 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0">
             <div v-if="showPortScanner" class="fixed inset-0 z-50 flex items-center justify-center p-4">
                 <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click.self="showPortScanner = false"></div>
                 <div class="relative bg-surface-900 border border-white/10 rounded-xl w-full max-w-md p-6 shadow-2xl animate-modal-in">
                     <button @click="showPortScanner = false" class="absolute top-4 right-4 text-gray-500 hover:text-white transition"><i class="fa-solid fa-xmark"></i></button>
-                    
                     <h3 class="text-lg font-medium text-white mb-2 flex items-center gap-2"><i class="fa-solid fa-radar text-brand-400"></i> Free Port Scanner</h3>
                     <p class="text-sm text-gray-400 mb-5">Enter a base port, and we'll instantly find the closest available port that won't conflict with your network.</p>
-                    
                     <div class="flex gap-2 mb-4">
                         <input v-model.number="scanStartPort" type="number" class="w-full bg-black border border-white/10 rounded-lg p-2.5 text-white focus:outline-none focus:border-brand-500 transition text-sm font-mono placeholder-gray-600" placeholder="e.g. 8080">
                         <button @click="findFreePort" class="bg-surface-100 text-black hover:bg-white px-5 rounded-lg font-medium text-sm transition">Scan</button>
                     </div>
-                    
                     <div v-if="suggestedPort" class="p-4 bg-brand-500/10 border border-brand-500/20 rounded-lg flex items-center gap-3">
                         <div class="w-8 h-8 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center shrink-0"><i class="fa-solid fa-check"></i></div>
                         <div>
@@ -285,7 +275,6 @@
                     showPortScanner: false,
                     scanStartPort: 8000,
                     suggestedPort: null,
-                    // Custom Confirm Modal State
                     confirmModal: {
                         show: false,
                         loading: false,
@@ -319,7 +308,25 @@
                 async fetchData() {
                     try {
                         const res = await fetch('/api/containers');
-                        this.containers = await res.json();
+                        let rawData = await res.json();
+
+                        // Fix duplicate ports issue (IPv4 & IPv6 duplicates for same mapping)
+                        this.containers = rawData.map(c => {
+                            const uniquePorts = [];
+                            const seenPorts = new Set();
+                            
+                            c.ports.forEach(p => {
+                                const portKey = `${p.public}-${p.type}`;
+                                if (!seenPorts.has(portKey)) {
+                                    seenPorts.add(portKey);
+                                    uniquePorts.push(p);
+                                }
+                            });
+                            
+                            c.ports = uniquePorts;
+                            return c;
+                        });
+
                         if(this.loading) this.loading = false;
                     } catch (e) { console.error(e); }
                 },
@@ -329,8 +336,6 @@
                         this.stats[id] = await res.json();
                     } catch (e) { console.error("Stats Error:", e); }
                 },
-                
-                // Custom Modal Functions
                 openConfirmModal(container, action) {
                     this.confirmModal.containerId = container.id;
                     this.confirmModal.action = action;
@@ -349,33 +354,31 @@
                     }
                 },
                 closeConfirmModal() {
-                    if (this.confirmModal.loading) return; // Prevent closing while API call is running
+                    if (this.confirmModal.loading) return;
                     this.confirmModal.show = false;
                     setTimeout(() => { 
                         this.confirmModal.containerId = null;
                         this.confirmModal.action = '';
-                    }, 200); // Wait for transition
+                    }, 200);
                 },
                 async executeAction() {
                     this.confirmModal.loading = true;
                     const { containerId, action } = this.confirmModal;
                     try {
                         await fetch(`/api/action/${containerId}/${action}`, { method: 'POST' });
-                        await this.fetchData(); // Refresh UI instantly
+                        await this.fetchData(); 
                     } catch (e) { 
                         alert("Failed to execute action. Ensure Docker socket is writable."); 
                     } finally {
                         this.closeConfirmModal();
                     }
                 },
-                // Keyboard Support (Esc to close modals)
                 handleKeydown(e) {
                     if (e.key === 'Escape') {
                         if (this.confirmModal.show) this.closeConfirmModal();
                         if (this.showPortScanner) this.showPortScanner = false;
                     }
                 },
-
                 getIconUrl(name) {
                     const cleanName = name.split('-')[0].toLowerCase();
                     return `https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/${cleanName}.png`;
