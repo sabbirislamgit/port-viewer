@@ -1,7 +1,7 @@
 name: port-viewer
 services:
   port-viewer:
-    image: ghcr.io/sabbirislamgit/port-viewer:latest
+    image: ghcr.io/sabbirislamgit/port-viewer:main
     container_name: port-viewer
     hostname: port-viewer-server
     restart: unless-stopped
